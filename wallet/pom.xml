@@ -270,6 +270,13 @@
 					<sdk>
 						<platform>16</platform>
 					</sdk>
+					<dex>
+						<jvmArguments>
+							<jvmArgument>-Xms512m</jvmArgument>
+							<jvmArgument>-Xmx2048m</jvmArgument>
+							<jvmArgument>-XX:-UseGCOverheadLimit</jvmArgument>
+						</jvmArguments>
+					</dex>
 					<sign>
 						<debug>both</debug>
 					</sign>
