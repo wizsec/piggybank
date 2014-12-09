@@ -129,7 +129,7 @@
 <dependency>
   <groupId>com.google.android.gms</groupId>
   <artifactId>google-play-services</artifactId>
-  <version>13</version>
+  <version>19</version>
   <type>apklib</type>
 </dependency>
 	</dependencies>
@@ -271,6 +271,9 @@
 						<platform>16</platform>
 					</sdk>
 					<dex>
+						<dexArguments>
+							<dexArgument>--multi-dex</dexArgument>
+						</dexArguments>
 						<jvmArguments>
 							<jvmArgument>-Xms512m</jvmArgument>
 							<jvmArgument>-Xmx2048m</jvmArgument>
