@@ -13,6 +13,8 @@
 #Build artifacts
 bin/
 gen/
+build/
+.gradle/
 libs/
 local.properties
 target/

@@ -46,7 +46,6 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -54,6 +53,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.support.multidex.MultiDex;
+import android.support.multidex.MultiDexApplication;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
 import android.widget.Toast;
@@ -74,7 +75,7 @@ import biz.wiz.android.wallet_test.R;
 /**
  * @author Andreas Schildbach
  */
-public class WalletApplication extends Application
+public class WalletApplication extends MultiDexApplication
 {
 	private Configuration config;
 	private ActivityManager activityManager;
@@ -86,12 +87,18 @@ public class WalletApplication extends Application
 	private File walletFile;
 	private Wallet wallet;
 	private PackageInfo packageInfo;
-	
+
 	private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
 	public static final String ACTION_WALLET_CHANGED = WalletApplication.class.getPackage().getName() + ".wallet_changed";
 
 	private static final Logger log = LoggerFactory.getLogger(WalletApplication.class);
+
+	@Override
+	protected void attachBaseContext(Context base) {
+		super.attachBaseContext(base);
+		MultiDex.install(this);
+	}
 
 	@Override
 	public void onCreate()
