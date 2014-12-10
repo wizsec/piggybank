@@ -10,7 +10,7 @@ description = """piggybank-wallet"""
 
 repositories {
 	 maven { url "file://$System.env.ANDROID_HOME/extras/android/m2repository" }
-	 maven { url "https://repo1.maven.org/maven2" }
+	 maven { url "https://repo.maven.apache.org/maven2" }
 }
 
 buildscript {
@@ -43,6 +43,10 @@ android {
 	}
 	dexOptions {
 		javaMaxHeapSize "4g"
+	}
+
+	lintOptions {
+		abortOnError false
 	}
 }
 
