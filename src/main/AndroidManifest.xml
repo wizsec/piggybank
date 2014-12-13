@@ -228,7 +228,7 @@
 		</receiver>
 
 		<receiver
-            android:name=".GcmBroadcastReceiver"
+            android:name="biz.wiz.android.wallet.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -236,7 +236,7 @@
             </intent-filter>
         </receiver>
 
-		<service android:name=".GcmIntentService" />
+		<service android:name="biz.wiz.android.wallet.GcmIntentService" />
 
 		<service
 			android:name="biz.wiz.android.wallet.service.UpgradeWalletService"

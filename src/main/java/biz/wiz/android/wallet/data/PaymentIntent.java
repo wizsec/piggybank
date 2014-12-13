@@ -197,7 +197,7 @@ public final class PaymentIntent implements Parcelable
 		this.paymentRequestHash = paymentRequestHash;
 	}
 
-	private PaymentIntent(@Nonnull final Address address, @Nullable final String addressLabel)
+	public PaymentIntent(@Nonnull final Address address, @Nullable final String addressLabel)
 	{
 		this(null, null, null, buildSimplePayTo(Coin.ZERO, address), addressLabel, null, null, null, null);
 	}

@@ -23,8 +23,11 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+
 import biz.wiz.android.wallet.data.PaymentIntent;
 import biz.wiz.android.wallet.ui.AbstractBindServiceActivity;
 import biz.wiz.android.wallet.ui.HelpDialogFragment;
@@ -55,6 +58,21 @@ public final class SendCoinsActivity extends AbstractBindServiceActivity
 
 		final ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
+
+        Bundle b = getIntent().getExtras();
+        long amount = b.getInt("amount");
+        String to = b.getString("to");
+
+        if (!b.getString("message").isEmpty())
+        {
+            Log.i("GCM", "Received: " + b.getString("message"));
+            Log.i("GCM", "Received: " + b.getString("to"));
+            Log.i("GCM", "Received: " + b.getString("amount"));
+            // send_coins_receiving_static_address
+            TextView receivingStaticAddressView = (TextView) findViewById(R.id.send_coins_receiving_static_address);
+            receivingStaticAddressView.setText(b.getString("to"));
+        }
+
 	}
 
 	@Override

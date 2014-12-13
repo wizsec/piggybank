@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nonnull;
 
@@ -43,12 +44,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.StrictMode;
@@ -57,6 +60,7 @@ import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.widget.Toast;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -88,13 +92,12 @@ public class WalletApplication extends MultiDexApplication
 	private Wallet wallet;
 	private PackageInfo packageInfo;
 
-	private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-
 	public static final String ACTION_WALLET_CHANGED = WalletApplication.class.getPackage().getName() + ".wallet_changed";
 
 	private static final Logger log = LoggerFactory.getLogger(WalletApplication.class);
 
-	@Override
+
+    @Override
 	protected void attachBaseContext(Context base) {
 		super.attachBaseContext(base);
 		MultiDex.install(this);
@@ -103,7 +106,8 @@ public class WalletApplication extends MultiDexApplication
 	@Override
 	public void onCreate()
 	{
-		new LinuxSecureRandom(); // init proper random number generator
+
+        new LinuxSecureRandom(); // init proper random number generator
 
 		initLogging();
 
@@ -595,21 +599,5 @@ public class WalletApplication extends MultiDexApplication
 		// workaround for no inexact set() before KitKat
 		final long now = System.currentTimeMillis();
 		alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, now + alarmInterval, AlarmManager.INTERVAL_DAY, alarmIntent);
-	}
-	
-	private boolean checkPlayServices() {
-	    int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-	    if (resultCode != ConnectionResult.SUCCESS) {
-	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-	        	
-	            // GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICES_RESOLUTION_REQUEST).show();
-	            
-	        } else {
-	            // Log.i(TAG, "This device is not supported.");
-	           //  finish();
-	        }
-	        return false;
-	    }
-	    return true;
 	}
 }
