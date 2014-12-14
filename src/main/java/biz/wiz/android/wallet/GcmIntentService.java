@@ -58,19 +58,18 @@ public class GcmIntentService extends IntentService {
              * not interested in, or that you don't recognize.
              */
             if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-                sendNotification("Send error: " + extras.toString());
+                sendNotification("Send error: " + extras.toString(), null);
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
-                sendNotification("Deleted messages on server: " + extras.toString());
+                sendNotification("Deleted messages on server: " + extras.toString(), null);
                 // If it's a regular GCM message, do some work.
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-                // Post notification of received message.
-                sendNotification(extras.getString("address"));
-
                 // parse and log
                 String address = extras.getString("address");
                 Long amount = Long.valueOf(extras.getString("amount"));
                 Log.i(TAG, "Received send request to " + address + " for " + amount + " satoshi");
-                doSendIntent(address, amount);
+
+                // Post notification of received message.
+                sendNotification(extras.getString("address"), prepareSendIntent(address, amount));
             }
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
@@ -79,7 +78,7 @@ public class GcmIntentService extends IntentService {
 
     private static final int SATOSHIS_PER_COIN = 100000000;
 
-    private void doSendIntent(final String address, final Long amount)
+    private Intent prepareSendIntent(final String address, final Long amount)
     {
         try {
             // build bitcoin uri from arguments
@@ -99,25 +98,25 @@ public class GcmIntentService extends IntentService {
             Intent sendIntent = new Intent(this, SendCoinsActivity.class);
             // add payment data as extra
             sendIntent.putExtra(SendCoinsActivity.INTENT_EXTRA_PAYMENT_INTENT, paymentIntent);
-            // start intent
+            // set intent as new task
             sendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(sendIntent);
+
+            return sendIntent;
         }
         catch (BitcoinURIParseException e)
         {
             Log.i(TAG, "Failed parsing send request to " + address + " for " + amount + " satoshi: " + e.toString());
         }
+
+		return null;
     }
 
     // Put the message into a notification and post it.
     // This is just one simple example of what you might choose to do with
     // a GCM message.
-    private void sendNotification(String msg) {
+    private void sendNotification(String msg, Intent sendIntent) {
         mNotificationManager = (NotificationManager)
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, WalletActivity.class), 0);
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
@@ -126,7 +125,12 @@ public class GcmIntentService extends IntentService {
                         .setStyle(new NotificationCompat.BigTextStyle().bigText("Sign transaction to " + msg))
                         .setContentText("Sign transaction to " + msg);
 
-        mBuilder.setContentIntent(contentIntent);
+        if (sendIntent != null)
+        {
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, sendIntent, 0);
+            mBuilder.setContentIntent(contentIntent);
+        }
+
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 }
