@@ -63,6 +63,7 @@ public class GcmIntentService extends IntentService {
                 sendNotification("Deleted messages on server: " + extras.toString(), null);
                 // If it's a regular GCM message, do some work.
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
+                Log.i(TAG, "Got cloud message: " + extras.toString());
                 // parse and log
                 String address = extras.getString("address");
                 Long amount = Long.valueOf(extras.getString("amount"));

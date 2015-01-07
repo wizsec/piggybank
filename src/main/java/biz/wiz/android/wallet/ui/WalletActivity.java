@@ -32,6 +32,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -42,6 +43,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nonnull;
 
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
@@ -50,10 +60,12 @@ import org.bitcoinj.core.Wallet;
 import org.bitcoinj.core.Wallet.BalanceType;
 import org.bitcoinj.store.WalletProtobufSerializer;
 import org.bitcoinj.wallet.Protos;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager.Request;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -107,6 +119,9 @@ import biz.wiz.android.wallet.util.Nfc;
 import biz.wiz.android.wallet.util.WalletUtils;
 import biz.wiz.android.wallet.util.WholeStringBuilder;
 import biz.wiz.android.wallet_test.R;
+import biz.wiz.android.wallet_test.SignTransactionActivity;
+
+import com.loopj.android.http.*;
 
 /**
  * @author Andreas Schildbach
@@ -368,30 +383,7 @@ public final class WalletActivity extends AbstractWalletActivity
 				HelpDialogFragment.page(getFragmentManager(), R.string.help_wallet);
 				return true;
             case R.id.wallet_options_echo: {
-                new AsyncTask<Void, Void, String>() {
-                    @Override
-                    protected String doInBackground(Void... params) {
-                        String msg = "";
-                        try {
-                            Bundle data = new Bundle();
-                            data.putString("my_message", "Hello World");
-                            data.putString("my_action", "com.google.android.gcm.demo.app.ECHO_NOW");
-                            String id = Integer.toString(msgId.incrementAndGet());
-                            gcm.send(SENDER_ID + "@gcm.googleapis.com", id, data);
-                            msg = "Sent message";
-                        } catch (IOException ex) {
-                            msg = "Error :" + ex.getMessage();
-                        }
-                        return msg;
-                    }
-
-                    @Override
-                    protected void onPostExecute(String msg) {
-                        // mDisplay.append(msg + "\n");
-                        Log.i(TAG, "" + msg);
-                    }
-                }.execute(null, null, null);
-
+                startActivity(new Intent(this, SignTransactionActivity.class));
                 return true;
             }
 		}
@@ -1142,13 +1134,14 @@ public final class WalletActivity extends AbstractWalletActivity
         // app version.
         int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
         // int currentVersion = getAppVersion(context);
-        int currentVersion = 1;
+        int currentVersion = 3;
         if (registeredVersion != currentVersion) {
             Log.i(TAG, "App version changed.");
             return "";
         }
 
         Log.i(TAG, "Device registered, registration ID=" + registrationId);
+        sendRegistrationIdToBackend(registrationId);
 
         return registrationId;
     }
@@ -1182,10 +1175,31 @@ public final class WalletActivity extends AbstractWalletActivity
      * device sends upstream messages to a server that echoes back the message
      * using the 'from' address in the message.
      */
-    private void sendRegistrationIdToBackend() {
+    private void sendRegistrationIdToBackend(String regId) {
         // Your implementation here.
 
-        // https://fafa.wiz.biz/
+        // https://wizsec.com/api/registerdevice
+
+        String url = "https://wizsec.com/api/registerdevice";
+
+        Log.i(TAG, "Try to run HTTP client "+ regId);
+
+        AsyncHttpClient client = new AsyncHttpClient();
+        RequestParams params = new RequestParams() ;
+        params.put("regid", regId);
+        AsyncHttpResponseHandler responseHandler = new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                Log.i(TAG, "Registered on backend");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                Log.i(TAG, "Failed to register");
+            }
+        };
+        client.post(url, params, responseHandler);
+
     }
 
     /**
@@ -1204,12 +1218,12 @@ public final class WalletActivity extends AbstractWalletActivity
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
                     regid = gcm.register(SENDER_ID);
-                    msg = "Device registered, registration ID=" + regid;
-                    Log.i(TAG, "Device registered, registration ID=" + regid);
+                    msg = "Device registered, hehu, registration ID=" + regid;
+                    Log.i(TAG, "Device registered registration ID=" + regid);
 
                     // You should send the registration ID to your server over HTTP, so it
                     // can use GCM/HTTP or CCS to send messages to your app.
-                    sendRegistrationIdToBackend();
+                    sendRegistrationIdToBackend(regid);
 
                     // For this demo: we don't need to send it because the device will send
                     // upstream messages to a server that echo back the message using the
@@ -1245,7 +1259,7 @@ public final class WalletActivity extends AbstractWalletActivity
     private void storeRegistrationId(Context context, String regId) {
         final SharedPreferences prefs = getGCMPreferences(context);
         // int appVersion = getAppVersion(context);
-        int appVersion = 1;
+        int appVersion = 3;
         Log.i(TAG, "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(PROPERTY_REG_ID, regId);
