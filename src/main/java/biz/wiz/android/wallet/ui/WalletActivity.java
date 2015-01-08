@@ -84,6 +84,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -1169,6 +1170,15 @@ public final class WalletActivity extends AbstractWalletActivity
         }
     }
 
+    private static AsyncHttpClient syncClient = new SyncHttpClient();
+    private static AsyncHttpClient asyncClient = new AsyncHttpClient();
+    private static AsyncHttpClient getClient()
+    {
+        // Return the synchronous HTTP client when the thread is not prepared
+        if (Looper.myLooper() == null)
+            return syncClient;
+        return asyncClient;
+    }
     /**
      * Sends the registration ID to your server over HTTP, so it can use GCM/HTTP
      * or CCS to send messages to your app. Not needed for this demo since the
@@ -1184,7 +1194,7 @@ public final class WalletActivity extends AbstractWalletActivity
 
         Log.i(TAG, "Try to run HTTP client "+ regId);
 
-        AsyncHttpClient client = new AsyncHttpClient();
+        AsyncHttpClient client = getClient();
         RequestParams params = new RequestParams() ;
         params.put("regid", regId);
         AsyncHttpResponseHandler responseHandler = new AsyncHttpResponseHandler() {
